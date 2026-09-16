@@ -325,7 +325,8 @@ public class EntitiesManagerScript : MonoBehaviour
             sphereCollider.radius = boidsParams.fearRadius;
         }
 
-        AdjustOnePredatorCollider(predatorsParams.prefab);
+        if (predatorsParams.prefab != null)
+            AdjustOnePredatorCollider(predatorsParams.prefab);
 
         foreach (GameObject predator in predators)
             AdjustOnePredatorCollider(predator);

@@ -92,6 +92,9 @@ public abstract class EntityParameters
         int calculationInterval, float smoothnessRadiusOffset, int nbBoids
     )
     {
+        if (spawnAreaGO == null || prefab == null)
+            return;
+
         spawnArea = spawnAreaGO.GetComponent<AreaScript>();
         if (spawnArea == null)
             throw new MissingComponentException(
