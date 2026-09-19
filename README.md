@@ -39,7 +39,6 @@ Behaviour settings live on the `EntitiesManager` object in the scene. Change the
 | `Assets/PortalReef/Prefabs/fish1_VMrig_boid.prefab` | The boid prefab the manager spawns: model, Boids layer, sphere collider, boid script |
 | `Assets/References/VivianMenard/` | Vivian Ménard's boids code and assets, kept separate from project code |
 | `Assets/Blender/` | Blender working files for rigging |
-| `PROJECT_HANDOFF.md` | Working notes for picking the project back up |
 
 ## Rigging a new fish
 
