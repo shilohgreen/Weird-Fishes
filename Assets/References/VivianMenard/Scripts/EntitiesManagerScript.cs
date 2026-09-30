@@ -295,11 +295,21 @@ public class EntitiesManagerScript : MonoBehaviour
         entity.transform.localScale *= (1 + scaleVariations * Random.Range(-1, 1));
     }
 
+    /// <summary>
+    /// Portal Reef hook: when set, provides spawn positions instead of the spawn area (e.g. from a scanned room).
+    /// Returning null falls back to the spawn area.
+    /// </summary>
+    public System.Func<EntityType, Vector3?> SpawnPositionOverride;
+
     /// <summary>Finds a random position to spawn an entity in the area related to its entity type.</summary>
     /// <param name="type">The type of the entity.</param>
     /// <returns>A random position to spawn the entity.</returns>
     private Vector3 GetRandomSpawnablePositionInArea(EntityType type)
     {
+        Vector3? overridePosition = SpawnPositionOverride?.Invoke(type);
+        if (overridePosition.HasValue)
+            return overridePosition.Value;
+
         AreaScript spawnArea = (type == EntityType.BOID) ?
             boidsParams.spawnArea : predatorsParams.spawnArea;
 

@@ -63,6 +63,10 @@ public class RoomReef : MonoBehaviour
             Destroy(oldArea);
         entitiesManager.boidsParams.spawnArea = areaGO.AddComponent<AreaScript>();
 
+        // Spawn at points MRUK judges clear of walls and furniture; fall back to the spawn area if it finds none.
+        entitiesManager.SpawnPositionOverride = _ =>
+            room.GenerateRandomPositionInRoom(spawnMargin, avoidVolumes: true);
+
         entitiesManager.NumberOfBoids = desiredBoids;
 
         Debug.Log($"[ 🐟 RoomReef.OnRoomLoaded ] Room {bounds.size} at {bounds.center}. Spawning {desiredBoids} boids in {size}.");
