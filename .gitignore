@@ -43,3 +43,7 @@ sysinfo.txt
 # OS files
 .DS_Store
 Thumbs.db
+
+# Unity build byproducts
+*_BurstDebugInformation_DoNotShip*/
+.utmp/

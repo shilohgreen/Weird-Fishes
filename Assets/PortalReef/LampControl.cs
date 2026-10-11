@@ -25,8 +25,18 @@ public class LampControl : MonoBehaviour
     private float saturation = 0.45f;
 
     [Header("Orb")]
+    [SerializeField, Tooltip("Material the orb is drawn with. Assign a URP Unlit material so the shader is included in builds.")]
+    private Material orbMaterialTemplate;
     [SerializeField, Min(0.01f), Tooltip("Diameter in metres of the visible orb marking the lamp.")]
-    private float orbSize = 0.08f;
+    private float orbSize = 0.12f;
+
+    [Header("Start position")]
+    [SerializeField, Tooltip("On start, move the lamp in front of the viewer's head instead of leaving it at its scene position.")]
+    private bool startInFrontOfHead = true;
+    [SerializeField, Min(0f), Tooltip("Metres in front of the head.")]
+    private float startDistance = 0.7f;
+    [SerializeField, Tooltip("Metres below eye level.")]
+    private float startDrop = 0.2f;
 
     private Light lamp;
     private Material orbMaterial;
@@ -52,6 +62,9 @@ public class LampControl : MonoBehaviour
 
     private void Start()
     {
+        if (startInFrontOfHead)
+            StartCoroutine(PlaceInFrontOfHead());
+
         hands = FindObjectsByType<OVRHand>(FindObjectsSortMode.None);
         wasPinching = new bool[hands.Length];
         indexTips = new Transform[hands.Length];
@@ -165,14 +178,44 @@ public class LampControl : MonoBehaviour
         lamp.color = Color.HSVToRGB(hue, saturation, 1f);
     }
 
+    /// <summary>
+    /// Waits for head tracking to settle, then parks the lamp a short distance in front of the viewer,
+    /// so it is always in view on the headset regardless of where the tracking origin landed.
+    /// </summary>
+    private System.Collections.IEnumerator PlaceInFrontOfHead()
+    {
+        yield return new WaitForSeconds(1f);
+
+        Camera head = Camera.main;
+        if (head == null)
+        {
+            Debug.LogWarning("[ 💡 LampControl.PlaceInFrontOfHead ] No main camera, leaving the lamp where it is.");
+            yield break;
+        }
+
+        Vector3 forward = Vector3.ProjectOnPlane(head.transform.forward, Vector3.up).normalized;
+        if (forward.sqrMagnitude < 0.001f)
+            forward = Vector3.forward;
+
+        transform.position = head.transform.position + forward * startDistance + Vector3.down * startDrop;
+        Debug.Log($"[ 💡 LampControl.PlaceInFrontOfHead ] Lamp placed at {transform.position}.");
+    }
+
     /// <summary>Builds the small unlit sphere that shows where the lamp is.</summary>
     private void CreateOrb()
     {
-        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-        if (shader == null)
+        Material template = orbMaterialTemplate;
+        if (template == null)
         {
-            Debug.LogError("[ 💡 LampControl.CreateOrb ] URP Unlit shader was not found.");
-            return;
+            // Shader.Find only works in a build if the shader shipped, so the assigned material is the reliable path.
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null)
+            {
+                Debug.LogError("[ 💡 LampControl.CreateOrb ] No orb material assigned and the URP Unlit shader is not in this build.");
+                return;
+            }
+            Debug.LogWarning("[ 💡 LampControl.CreateOrb ] No orb material assigned; falling back to Shader.Find, which can fail in builds.");
+            template = new Material(shader);
         }
 
         GameObject orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -181,7 +224,7 @@ public class LampControl : MonoBehaviour
         orb.transform.SetParent(transform, false);
         orb.transform.localScale = orbSize * Vector3.one;
 
-        orbMaterial = new Material(shader);
+        orbMaterial = new Material(template);
         orb.GetComponent<Renderer>().sharedMaterial = orbMaterial;
     }
 
@@ -192,7 +235,7 @@ public class LampControl : MonoBehaviour
             return;
 
         float level = Mathf.InverseLerp(minIntensity, maxIntensity, lamp.intensity);
-        float brightness = Mathf.Lerp(0.35f, 1f, level) * (carryingHand != null ? 1.3f : 1f);
+        float brightness = Mathf.Lerp(0.7f, 1.2f, level) * (carryingHand != null ? 1.3f : 1f);
         orbMaterial.color = lamp.color * brightness;
     }
 }
